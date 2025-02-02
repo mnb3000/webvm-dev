@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest # Image to run the worker on.
 
     env:
-      TAG: "ext2-webvm-base-image" # Tag of docker image.
+      TAG: "mnb3000/dotfiles-image:alpine-webvm" # Tag of docker image.
       IMAGE_SIZE: "${{ github.event.inputs.IMAGE_SIZE }}"
       DEPLOY_DIR: /webvm_deploy/ # Path to directory where we host the final image from.
 
@@ -110,8 +110,8 @@ jobs:
       # Create directory to host the image from.
       - run: sudo mkdir -p $DEPLOY_DIR
 
-      # Build the i386 Dockerfile image.
-      - run: docker build . --tag $TAG --file ${{ github.event.inputs.DOCKERFILE_PATH }} --platform=i386
+      # Pull the i386 Dockerfile image.
+      - run: docker pull $TAG --platform=i386
 
       # Run the docker image so that we can export the container.
       # Run the Docker container with the Google Public DNS nameservers: 8.8.8.8, 8.8.4.4
