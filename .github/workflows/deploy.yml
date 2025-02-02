@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest # Image to run the worker on.
 
     env:
-      TAG: "mnb3000/dotfiles-image:alpine-webvm" # Tag of docker image.
+      TAG: "mnb3000/dotfiles-image:alpine-webvm-main" # Tag of docker image.
       IMAGE_SIZE: "${{ github.event.inputs.IMAGE_SIZE }}"
       DEPLOY_DIR: /webvm_deploy/ # Path to directory where we host the final image from.
 
