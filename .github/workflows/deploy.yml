@@ -126,21 +126,21 @@ jobs:
           echo "CONTAINER_ID=$(sudo docker ps -aq)" >> $GITHUB_ENV
 
       # We extract the CMD, we first need to figure whether the Dockerfile uses CMD or an Entrypoint.
-      - name: Extracting CMD / Entrypoint and args
-        shell: bash
-        run: |
-          cmd=$(sudo docker inspect --format='{{json .Config.Cmd}}' $CONTAINER_ID)
-          entrypoint=$(sudo docker inspect --format='{{json .Config.Entrypoint}}' $CONTAINER_ID)
-          if [[ $entrypoint != "null" && $cmd != "null" ]]; then
-            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint' )" >> $GITHUB_ENV
-            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd' )" >> $GITHUB_ENV
-          elif [[ $cmd != "null" ]]; then
-            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[:1]' )" >> $GITHUB_ENV
-            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[1:]' )" >> $GITHUB_ENV
-          else
-            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[:1]' )" >> $GITHUB_ENV
-            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[1:]' )" >> $GITHUB_ENV
-          fi
+      # - name: Extracting CMD / Entrypoint and args
+      #   shell: bash
+      #   run: |
+      #     cmd=$(sudo docker inspect --format='{{json .Config.Cmd}}' $CONTAINER_ID)
+      #     entrypoint=$(sudo docker inspect --format='{{json .Config.Entrypoint}}' $CONTAINER_ID)
+      #     if [[ $entrypoint != "null" && $cmd != "null" ]]; then
+      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint' )" >> $GITHUB_ENV
+      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd' )" >> $GITHUB_ENV
+      #     elif [[ $cmd != "null" ]]; then
+      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[:1]' )" >> $GITHUB_ENV
+      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[1:]' )" >> $GITHUB_ENV
+      #     else
+      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[:1]' )" >> $GITHUB_ENV
+      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[1:]' )" >> $GITHUB_ENV
+      #     fi
 
       # We extract the ENV, CMD/Entrypoint and cwd from the Docker container with docker inspect.
       - name: Extracting env, args and cwd.
@@ -182,8 +182,8 @@ jobs:
       - name: Adjust config_github_terminal.js
         run: |
           sed -i 's#IMAGE_URL#"${{ env.IMAGE_NAME }}"#g' config_github_terminal.js
-          sed -i 's#CMD#${{ env.CMD }}#g' config_github_terminal.js
-          sed -i 's#ARGS#${{ env.ARGS }}#g' config_github_terminal.js
+          # sed -i 's#CMD#${{ env.CMD }}#g' config_github_terminal.js
+          # sed -i 's#ARGS#${{ env.ARGS }}#g' config_github_terminal.js
           sed -i 's#ENV#${{ env.ENV }}#g' config_github_terminal.js
           sed -i 's#CWD#${{ env.CWD }}#g' config_github_terminal.js
 
