@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
     # Allow inputs to be passed when manually triggering the workflow from the Actions tab
     inputs:
-      DOCKERFILE_PATH:
+      DOCKERHUB_TAG:
         type: string
-        description: "Path to the Dockerfile"
+        description: "Docker Hub tag"
         required: true
-        default: "dockerfiles/debian_mini"
+        default: "mnb3000/dotfiles-image:alpine-webvm-main"
 
       IMAGE_SIZE:
         type: string
@@ -44,14 +44,14 @@ jobs:
       - uses: actions/checkout@v3
       # Guard clause that cancels the workflow in case of an invalid DOCKERFILE_PATH and/or incorrectly configured Github Pages.
       # The main reason for choosing this workaround for aborting the workflow is the fact that it does not display the workflow as successful, which can set false expectations.
-      - name: DOCKERFILE_PATH.
-        shell: bash
-        run: |
-          # We check whether the Dockerfile_path is valid. 
-          if [ ! -f ${{ github.event.inputs.DOCKERFILE_PATH }} ]; then
-              echo "::error title=Invalid Dockerfile path::No file found at ${{ github.event.inputs.DOCKERFILE_PATH }}"
-              echo "terminate=true" >> $GITHUB_ENV
-          fi
+      # - name: DOCKERFILE_PATH.
+      #   shell: bash
+      #   run: |
+      #     # We check whether the Dockerfile_path is valid.
+      #     if [ ! -f ${{ github.event.inputs.DOCKERFILE_PATH }} ]; then
+      #         echo "::error title=Invalid Dockerfile path::No file found at ${{ github.event.inputs.DOCKERFILE_PATH }}"
+      #         echo "terminate=true" >> $GITHUB_ENV
+      #     fi
 
       - name: Github Pages config guard clause
         if: ${{ github.event.inputs.DEPLOY_TO_GITHUB_PAGES == 'true' }}
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest # Image to run the worker on.
 
     env:
-      TAG: "mnb3000/dotfiles-image:alpine-webvm-main" # Tag of docker image.
+      TAG: "${{ github.event.inputs.DOCKERHUB_TAG }}" # Tag of docker image.
       IMAGE_SIZE: "${{ github.event.inputs.IMAGE_SIZE }}"
       DEPLOY_DIR: /webvm_deploy/ # Path to directory where we host the final image from.
 
@@ -105,7 +105,7 @@ jobs:
       - name: Generate the image_name.
         id: image_name_gen
         run: |
-          echo "IMAGE_NAME=$(basename ${{ github.event.inputs.DOCKERFILE_PATH }})_$(date +%Y%m%d)_${{ github.run_id }}.ext2" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$(echo ${{ github.event.inputs.DOCKERHUB_TAG }} | cut -d ':' -f 2)_$(date +%Y%m%d)_${{ github.run_id }}.ext2" >> $GITHUB_ENV
 
       # Create directory to host the image from.
       - run: sudo mkdir -p $DEPLOY_DIR
