@@ -1,4 +1,4 @@
-FROM --platform=i386 i386/debian:unstable
+FROM --platform=i386 i386/debian:testing
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get clean && apt-get update && apt-get -y upgrade
 RUN apt-get install -y bash sudo git xdg-user-dirs python3 python-is-python3
