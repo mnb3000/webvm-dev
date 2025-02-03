@@ -101,9 +101,7 @@ jobs:
       - name: Maximize build space
         uses: jlumbroso/free-disk-space@main
         with:
-          tool-cache: false
           docker-images: false
-          large-packages: false
 
       # Checks-out our repository under $GITHUB_WORKSPACE, so our job can access it
       - uses: actions/checkout@v4
