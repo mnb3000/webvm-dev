@@ -1,7 +1,7 @@
 FROM --platform=i386 i386/debian:unstable
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get clean && apt-get update && apt-get -y upgrade
-RUN apt-get install -y bash sudo git xdg-user-dirs
+RUN apt-get install -y bash sudo git xdg-user-dirs python3 python-is-python3
 
 RUN useradd -G sudo -m mnb3000 && echo "mnb3000:password" | chpasswd
 RUN sudo -u "mnb3000" xdg-user-dirs-update
