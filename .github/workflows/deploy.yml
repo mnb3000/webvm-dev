@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
     # Allow inputs to be passed when manually triggering the workflow from the Actions tab
     inputs:
-      DOCKERHUB_TAG:
+      DOCKERFILE_PATH:
         type: string
-        description: "Docker Hub tag"
+        description: "Path to the Dockerfile"
         required: true
-        default: "mnb3000/dotfiles-image:alpine-webvm-main"
+        default: "dockerfiles/alpine-webvm.Dockerfile"
 
       IMAGE_SIZE:
         type: string
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest # Image to run the worker on.
 
     env:
-      TAG: "${{ github.event.inputs.DOCKERHUB_TAG }}" # Tag of docker image.
+      TAG: "ext2-webvm-base-image" # Tag of docker image.
       IMAGE_SIZE: "${{ github.event.inputs.IMAGE_SIZE }}"
       DEPLOY_DIR: /webvm_deploy/ # Path to directory where we host the final image from.
 
@@ -105,7 +105,7 @@ jobs:
       - name: Generate the image_name.
         id: image_name_gen
         run: |
-          echo "IMAGE_NAME=$(echo ${{ github.event.inputs.DOCKERHUB_TAG }} | cut -d ':' -f 2)_$(date +%Y%m%d)_${{ github.run_id }}.ext2" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$(basename ${{ github.event.inputs.DOCKERFILE_PATH }})_$(date +%Y%m%d)_${{ github.run_id }}.ext2" >> $GITHUB_ENV
 
       # Create directory to host the image from.
       - run: sudo mkdir -p $DEPLOY_DIR
@@ -116,8 +116,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Pull the i386 Dockerfile image.
-      - run: docker pull $TAG --platform=i386
+      # Build the i386 Dockerfile image.
+      - run: docker build . --tag $TAG --file ${{ github.event.inputs.DOCKERFILE_PATH }} --platform=i386
 
       # Run the docker image so that we can export the container.
       # Run the Docker container with the Google Public DNS nameservers: 8.8.8.8, 8.8.4.4
@@ -126,21 +126,21 @@ jobs:
           echo "CONTAINER_ID=$(sudo docker ps -aq)" >> $GITHUB_ENV
 
       # We extract the CMD, we first need to figure whether the Dockerfile uses CMD or an Entrypoint.
-      # - name: Extracting CMD / Entrypoint and args
-      #   shell: bash
-      #   run: |
-      #     cmd=$(sudo docker inspect --format='{{json .Config.Cmd}}' $CONTAINER_ID)
-      #     entrypoint=$(sudo docker inspect --format='{{json .Config.Entrypoint}}' $CONTAINER_ID)
-      #     if [[ $entrypoint != "null" && $cmd != "null" ]]; then
-      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint' )" >> $GITHUB_ENV
-      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd' )" >> $GITHUB_ENV
-      #     elif [[ $cmd != "null" ]]; then
-      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[:1]' )" >> $GITHUB_ENV
-      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[1:]' )" >> $GITHUB_ENV
-      #     else
-      #       echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[:1]' )" >> $GITHUB_ENV
-      #       echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[1:]' )" >> $GITHUB_ENV
-      #     fi
+      - name: Extracting CMD / Entrypoint and args
+        shell: bash
+        run: |
+          cmd=$(sudo docker inspect --format='{{json .Config.Cmd}}' $CONTAINER_ID)
+          entrypoint=$(sudo docker inspect --format='{{json .Config.Entrypoint}}' $CONTAINER_ID)
+          if [[ $entrypoint != "null" && $cmd != "null" ]]; then
+            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint' )" >> $GITHUB_ENV
+            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd' )" >> $GITHUB_ENV
+          elif [[ $cmd != "null" ]]; then
+            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[:1]' )" >> $GITHUB_ENV
+            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Cmd[1:]' )" >> $GITHUB_ENV
+          else
+            echo "CMD=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[:1]' )" >> $GITHUB_ENV
+            echo "ARGS=$( sudo docker inspect $CONTAINER_ID | jq --compact-output '.[0].Config.Entrypoint[1:]' )" >> $GITHUB_ENV
+          fi
 
       # We extract the ENV, CMD/Entrypoint and cwd from the Docker container with docker inspect.
       - name: Extracting env, args and cwd.
